@@ -20,11 +20,11 @@ export default class PingCommand extends Command {
                     fields: [
                         {
                             name: "Source",
-                            value: "Mon code est disponible sur [GitHub](https://github.com/federation-interservices-d-informatique/), n'hésitez pas à contribuer!"
+                            value: "Mon code est disponible sur [GitHub](https://github.com/federation-interservices-d-informatique/fiibot-moderation), n'hésitez pas à contribuer!"
                         },
                         {
                             name: "License",
-                            value: "Ce projet est sous license [MIT](https://github.com/federation-interservices-d-informatique/fiibot-logger/blob/main/LICENSE)"
+                            value: "Ce projet est sous license [MIT](https://github.com/federation-interservices-d-informatique/fiibot-moderation/blob/main/LICENSE)"
                         },
                         {
                             name: "Auteurs",
