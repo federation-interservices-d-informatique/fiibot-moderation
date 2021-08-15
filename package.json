@@ -1,5 +1,5 @@
 {
-  "name": "@federation-interservices-d-informatique/fiibot-template",
+  "name": "@federation-interservices-d-informatique/fiibot-moderation",
   "version": "1.0.0",
   "description": "Common template for FII bots",
   "main": "dist/index.js",
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/federation-interservices-d-informatique/fiibot-template.git"
+    "url": "git+https://github.com/federation-interservices-d-informatique/fiibot-moderation.git"
   },
   "keywords": [
     "fii",
@@ -23,7 +23,7 @@
   "author": "FII Dev team & contributors",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/federation-interservices-d-informatique/fiibot-template/issues"
+    "url": "https://github.com/federation-interservices-d-informatique/fiibot-moderation/issues"
   },
   "homepage": "https://github.com/federation-interservices-d-informatique/fiibot-template#readme",
   "devDependencies": {
@@ -40,7 +40,7 @@
     "typescript": "^4.3.5"
   },
   "dependencies": {
-    "@federation-interservices-d-informatique/fiibot-common": "^2.2.1",
+    "@federation-interservices-d-informatique/fiibot-common": "^2.3.1",
     "discord.js": "^13.1.0"
   }
 }
