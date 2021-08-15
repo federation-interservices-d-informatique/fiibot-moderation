@@ -20,6 +20,7 @@ client.eventManager.registerEvent(
     "checkraidmode",
     "guildMemberAdd",
     async (member: GuildMember) => {
+        if (member.user.bot) return;
         if (
             client.commandManager.commands.get("raidmode").data.get("raidmode")
         ) {
