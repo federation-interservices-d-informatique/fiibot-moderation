@@ -24,6 +24,14 @@ client.eventManager.registerEvent(
         if (
             client.commandManager.commands.get("raidmode").data.get("raidmode")
         ) {
+            if (
+                (
+                    client.commandManager.commands
+                        .get("allow")
+                        .data.get("allowedUsers") as string[]
+                ).includes(member.user.id)
+            )
+                return;
             try {
                 await member.user.send({
                     embeds: [
