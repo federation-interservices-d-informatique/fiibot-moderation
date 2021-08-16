@@ -125,11 +125,21 @@ client.eventManager.registerEvent(
                         "ANTISPAM"
                     );
                 }
-                msg.member.kick("Spam");
+                if (msg.member.kickable) msg.member.kick("Spam");
                 msg.channel.send(
                     `${msg.author.tag} (${msg.author.id}) a été expulsé(e) pour Spam`
                 );
+                tedisClient.del(msg.author.id);
+            } else {
+                if (
+                    messages.length > 15 &&
+                    (messages[0].split("^")[0] as unknown as number) >
+                        msg.createdTimestamp - 60 * 1000
+                ) {
+                    tedisClient.del(msg.author.id);
+                }
             }
         }
+        console.log(await tedisClient.llen(msg.author.id));
     }
 );
