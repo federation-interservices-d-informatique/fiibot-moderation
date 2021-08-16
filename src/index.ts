@@ -13,6 +13,12 @@ const client = new fiiClient(
         },
         owners: [743851266635071710],
         token: process.env.BOT_TOKEN
+    },
+    {
+        host: process.env.DB_HOST,
+        database: process.env.POSTGRES_DB,
+        password: process.env.POSTGRES_PASSWORD,
+        user: process.env.POSTGRES_USER
     }
 );
 
@@ -140,6 +146,5 @@ client.eventManager.registerEvent(
                 }
             }
         }
-        console.log(await tedisClient.llen(msg.author.id));
     }
 );
