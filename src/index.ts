@@ -1,7 +1,7 @@
 import { fiiClient } from "@federation-interservices-d-informatique/fiibot-common";
-import { GuildMember } from "discord.js";
+import { GuildMember, Message } from "discord.js";
 import { getDirname } from "./utils/getdirname.js";
-
+import { Tedis } from "redis-typescript";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const client = new fiiClient(
     {
@@ -15,6 +15,12 @@ const client = new fiiClient(
         token: process.env.BOT_TOKEN
     }
 );
+
+const tedisClient = new Tedis({
+    port: parseInt(process.env.REDIS_PORT),
+    host: process.env.REDIS_HOST
+});
+tedisClient.on("error", client.logger.error);
 
 client.eventManager.registerEvent(
     "checkraidmode",
@@ -58,5 +64,15 @@ client.eventManager.registerEvent(
                 );
             }
         }
+    }
+);
+
+client.eventManager.registerEvent(
+    "antispam",
+    "messageCreate",
+    (msg: Message) => {
+        /** Skip DMs */
+        if (!msg.guild) return;
+        tedisClient;
     }
 );

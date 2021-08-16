@@ -1,4 +1,9 @@
 version: "3"
+
+networks:
+    fiibot-mod:
+        external: false
+
 services:
     bot:
         container_name: "fiibot-moderation"
@@ -9,3 +14,9 @@ services:
             - ".:/usr/src/bot"
         env_file:
             - ".env"
+        networks:
+            - "fiibot-mod"
+    redis:
+        image: "redis:6.2.5-alpine"
+        networks:
+            - "fiibot-mod"
