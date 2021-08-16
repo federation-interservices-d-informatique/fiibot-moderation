@@ -42,7 +42,6 @@
   "dependencies": {
     "@federation-interservices-d-informatique/fiibot-common": "^2.3.1",
     "discord.js": "^13.1.0",
-    "redis-typescript": "^0.1.2",
-    "uuid": "^8.3.2"
+    "tedis": "^0.1.12"
   }
 }

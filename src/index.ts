@@ -1,11 +1,11 @@
 import { fiiClient } from "@federation-interservices-d-informatique/fiibot-common";
 import { GuildMember, Message } from "discord.js";
 import { getDirname } from "./utils/getdirname.js";
-import { Tedis } from "redis-typescript";
+import { Tedis } from "tedis";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const client = new fiiClient(
     {
-        intents: ["GUILDS", "GUILD_MEMBERS"]
+        intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_MESSAGES"]
     },
     {
         commandManagerSettings: {
@@ -70,9 +70,66 @@ client.eventManager.registerEvent(
 client.eventManager.registerEvent(
     "antispam",
     "messageCreate",
-    (msg: Message) => {
-        /** Skip DMs */
-        if (!msg.guild) return;
-        tedisClient;
+    async (msg: Message) => {
+        if (msg.partial) await msg.fetch();
+        /** Skip DMs and bots*/
+        if (!msg.guild || msg.author.bot) return;
+        if (
+            msg.member.permissions.has("BAN_MEMBERS") ||
+            client.isOwner(msg.author)
+        )
+            return;
+
+        await tedisClient.lpush(
+            msg.author.id,
+            `${msg.createdTimestamp}^${msg.id}`
+        );
+        const messages = await tedisClient.lrange(
+            msg.author.id,
+            0,
+            (await tedisClient.llen(msg.author.id)) - 1
+        );
+        if (messages.length > 7) {
+            const spam = messages.filter((m) => {
+                const stamp = m.split("^")[0] as unknown as number;
+                if (stamp > msg.createdTimestamp - 7000) {
+                    return m.split("^")[1];
+                }
+            });
+            if (spam.length >= 7) {
+                spam.forEach(async (m) => {
+                    try {
+                        const message = await msg.channel.messages.fetch(
+                            m.split("^")[1]
+                        );
+                        if (message.deletable) await message.delete();
+                    } catch (e) {
+                        client.logger.error(
+                            `Can't delete spam messages in ${msg.guild.name}`
+                        );
+                    }
+                });
+                try {
+                    await msg.author.send({
+                        embeds: [
+                            {
+                                title: `Expulsion de ${msg.guild.name}`,
+                                color: "RED",
+                                description: `Vous avez été expulsé(e) de ${msg.guild.name} pour Spam.`
+                            }
+                        ]
+                    });
+                } catch (e) {
+                    client.logger.error(
+                        `Can't dm ${msg.author.username}`,
+                        "ANTISPAM"
+                    );
+                }
+                msg.member.kick("Spam");
+                msg.channel.send(
+                    `${msg.author.tag} (${msg.author.id}) a été expulsé(e) pour Spam`
+                );
+            }
+        }
     }
 );
