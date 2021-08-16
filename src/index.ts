@@ -45,7 +45,7 @@ client.eventManager.registerEvent(
                 });
             } catch (e) {
                 client.logger.error(
-                    `Unable to DM ${member.guild.name}`,
+                    `Unable to DM ${member.user.username}`,
                     "RAIDMODE"
                 );
             }
