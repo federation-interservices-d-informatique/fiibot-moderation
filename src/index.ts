@@ -26,6 +26,7 @@ const tedisClient = new Tedis({
     port: parseInt(process.env.REDIS_PORT),
     host: process.env.REDIS_HOST
 });
+
 tedisClient.on("error", client.logger.error);
 
 client.eventManager.registerEvent(
@@ -116,6 +117,10 @@ client.eventManager.registerEvent(
                     }
                 });
                 try {
+                    client.logger.info(
+                        `Kicking ${msg.author.username} (${msg.author.id}) in ${msg.guild.name}`,
+                        "ANTISPAM"
+                    );
                     await msg.author.send({
                         embeds: [
                             {
