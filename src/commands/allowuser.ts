@@ -8,15 +8,15 @@ export default class PingCommand extends Command {
         super(
             client,
             {
-                name: "deny",
+                name: "allowuser",
                 description:
-                    "Interdir à un utilisateur de passer à travers le raidmode",
+                    "Permettre un utilisateur de passer à travers le raidmode",
                 options: [
                     {
                         type: "STRING",
                         name: "utilisateur",
                         required: true,
-                        description: "L'utilisateur à interdir"
+                        description: "L'utilisateur à autoriser"
                     }
                 ]
             },
@@ -29,17 +29,15 @@ export default class PingCommand extends Command {
             inter.reply("Utilisateur invalide!");
             return;
         }
-        let allowed: string[] =
+        const allowed: string[] =
             (this.data.get("allowedUsers") as string[]) || [];
-        allowed = allowed.filter((f) => f !== user);
+        allowed.push(user);
 
         inter.reply(
-            `Utilisateur interdit\nListe des utilisateurs autorisés: ${allowed.join(
+            `Utilisateur autorisé!\nListe des utilisateurs autorisés: ${allowed.join(
                 ", "
             )}`
         );
-        this.client.commandManager.commands
-            .get("allow")
-            .data.set("allowedUsers", allowed);
+        this.data.set("allowedUsers", allowed);
     }
 }

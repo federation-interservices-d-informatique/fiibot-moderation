@@ -40,7 +40,7 @@ client.eventManager.registerEvent(
             if (
                 (
                     client.commandManager.commands
-                        .get("allow")
+                        .get("allowuser")
                         .data.get("allowedUsers") as string[]
                 ).includes(member.user.id)
             )
