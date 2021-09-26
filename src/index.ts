@@ -91,6 +91,13 @@ client.eventManager.registerEvent(
         )
             return;
 
+        const allowedChans =
+            (await client.dbclient.get<Array<string>>(
+                `${msg.guildId}-allowedchannels`
+            )) || [];
+
+        if (allowedChans.includes(msg.channelId)) return;
+
         await tedisClient.lpush(
             msg.author.id,
             `${msg.createdTimestamp}^${msg.id}`
