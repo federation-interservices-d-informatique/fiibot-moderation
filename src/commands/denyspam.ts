@@ -6,13 +6,13 @@ import {
 export default class PingCommand extends Command {
     constructor(client: fiiClient) {
         super(client, {
-            name: "spamallow",
-            description: "Autoriser le spam dans un salon",
+            name: "spamdisallow",
+            description: "Interdir le spam dans un canal",
             options: [
                 {
                     type: "CHANNEL",
                     name: "channel",
-                    description: "Le salon à ignorer",
+                    description: "Le salon ou interdir le spam",
                     required: true
                 }
             ]
@@ -21,31 +21,21 @@ export default class PingCommand extends Command {
     async run(inter: CommandInteraction): Promise<void> {
         const channel = inter.options.get("channel").channel;
         const allowChansStoreKey = `${inter.guild.id}-allowedchannels`;
-        if (
-            channel.type !== "GUILD_TEXT" &&
-            channel.type !== "GUILD_PUBLIC_THREAD" &&
-            channel.type !== "GUILD_PRIVATE_THREAD"
-        ) {
-            return inter.reply({
-                content: `Le canal est de type \`${channel.type}\`, qui ne peut pas être ignoré.`,
-                ephemeral: true
-            });
-        }
-        const allowedChannels =
+        let allowedChannels =
             (await this.client.dbclient.get<Array<string>>(
                 allowChansStoreKey
             )) || [];
 
-        if (allowedChannels.includes(channel.id))
+        if (!allowedChannels.includes(channel.id))
             return inter.reply({
                 ephemeral: true,
-                content: "Le canal est déjà ignoré ! "
+                content: `Le canal ${channel.toString()} n'était pas ignoré par l'antispam`
             });
 
-        allowedChannels.push(channel.id);
+        allowedChannels = allowedChannels.filter((c) => c != channel.id);
         await this.client.dbclient.set(allowChansStoreKey, allowedChannels);
         inter.reply({
-            content: `Le canal ${channel.toString()} est maintenant ignoré par l'antispam!`
+            content: `Le canal ${channel.toString()} n'est plus ignoré par l'antispam!`
         });
     }
 }
