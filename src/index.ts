@@ -20,7 +20,8 @@ const client = new fiiClient(
             database: process.env.POSTGRES_DB,
             password: process.env.POSTGRES_PASSWORD,
             user: process.env.POSTGRES_USER
-        }
+        },
+        tableName: "fiibotmoderation"
     }
 );
 
@@ -39,6 +40,7 @@ client.eventManager.registerEvent(
         if (
             client.commandManager.commands.get("raidmode").data.get("raidmode")
         ) {
+            if (client.isOwner(member.user)) return;
             if (
                 (
                     client.commandManager.commands
