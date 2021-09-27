@@ -5,18 +5,22 @@ import {
 } from "@federation-interservices-d-informatique/fiibot-common";
 export default class PingCommand extends Command {
     constructor(client: fiiClient) {
-        super(client, {
-            name: "spamdisallow",
-            description: "Interdir le spam dans un canal",
-            options: [
-                {
-                    type: "CHANNEL",
-                    name: "channel",
-                    description: "Le salon ou interdir le spam",
-                    required: true
-                }
-            ]
-        });
+        super(
+            client,
+            {
+                name: "spamdisallow",
+                description: "Interdir le spam dans un canal",
+                options: [
+                    {
+                        type: "CHANNEL",
+                        name: "channel",
+                        description: "Le salon ou interdir le spam",
+                        required: true
+                    }
+                ]
+            },
+            { userPermissions: ["ADMINISTRATOR"] }
+        );
     }
     async run(inter: CommandInteraction): Promise<void> {
         const channel = inter.options.get("channel").channel;
