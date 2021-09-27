@@ -188,7 +188,11 @@ client.eventManager.registerEvent(
                     const response = await fetch(
                         `https://discord.com/api/v9/invites/${inviteCode}`
                     );
-                    if (!response.ok) return;
+                    if (!response.ok)
+                        return client.logger.warn(
+                            `Detected invalid invite ${inviteCode}`,
+                            "PROCESSINVITES"
+                        );
                     const data: Invite =
                         (await response.json()) as unknown as Invite;
                     if (!data.guild) return await msg.delete();

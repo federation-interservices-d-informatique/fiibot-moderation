@@ -1,5 +1,6 @@
-export const INVITATION_REGEX =
-    /(https:\/\/|http:\/\/|)?(www)?discord.(com\/invite|gg)\/[0-Z]{1,20}/gim;
+import { Invite } from "discord.js";
+
+export const INVITATION_REGEX = Invite.INVITES_PATTERN;
 
 export const SERVERS_LIST = [
     "706283053160464395",
@@ -9,6 +10,3 @@ export const SERVERS_LIST = [
     "745664551831339150",
     "877489551206125588"
 ];
-
-export const SERVERS_REGEX =
-    /877489551206125588|745664551831339150|622831434427662346|456901919344951298|696156347946762240|706283053160464395/gm;
