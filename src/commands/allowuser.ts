@@ -20,7 +20,7 @@ export default class PingCommand extends Command {
                     }
                 ]
             },
-            { guildOnly: true }
+            { guildOnly: true, ownerOnly: true }
         );
     }
     async run(inter: CommandInteraction): Promise<void> {
