@@ -1,5 +1,5 @@
 import { fiiClient } from "@federation-interservices-d-informatique/fiibot-common";
-import { GuildMember, Message } from "discord.js";
+import { CommandInteraction, GuildMember, Message } from "discord.js";
 import fetch from "node-fetch";
 import { getDirname } from "./utils/getdirname.js";
 import { Tedis } from "tedis";
@@ -229,6 +229,28 @@ client.eventManager.registerEvent(
                     );
                 }
             });
+        }
+    }
+);
+
+client.eventManager.registerEvent(
+    "handleReportMenu",
+    "interactionCreate",
+    async (interaction: CommandInteraction) => {
+        if (interaction.isContextMenu()) {
+            if (interaction.commandName === "Report") {
+                const cmd = client.commandManager.commands.get("Report");
+                if (
+                    !cmd.hasBotPermission(interaction) ||
+                    !cmd.hasPermission(interaction)
+                )
+                    return;
+                try {
+                    cmd.run(interaction);
+                } catch (e) {
+                    console.log(e);
+                }
+            }
         }
     }
 );
