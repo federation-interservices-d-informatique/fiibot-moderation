@@ -1,9 +1,9 @@
 import { fiiClient } from "@federation-interservices-d-informatique/fiibot-common";
-import { CommandInteraction, GuildMember, Message } from "discord.js";
+import { CommandInteraction, GuildMember, Invite, Message } from "discord.js";
 import fetch from "node-fetch";
 import { getDirname } from "./utils/getdirname.js";
 import { Tedis } from "tedis";
-import { INVITATION_REGEX, SERVERS_REGEX } from "./utils/constants.js";
+import { INVITATION_REGEX, SERVERS_LIST } from "./utils/constants.js";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const client = new fiiClient(
     {
@@ -182,11 +182,19 @@ client.eventManager.registerEvent(
             if (invitationLink.length >= 5 && msg.deletable)
                 return await msg.delete();
             invitationLink.every(async (link) => {
+                const splitted = link.split("/");
+                const inviteCode = splitted[splitted.length - 1];
                 try {
-                    const data = await (await fetch(link)).text();
-                    if (!SERVERS_REGEX.test(data)) {
+                    const response = await fetch(
+                        `https://discord.com/api/v9/invites/${inviteCode}`
+                    );
+                    if (!response.ok) return;
+                    const data: Invite =
+                        (await response.json()) as unknown as Invite;
+                    if (!data.guild) return await msg.delete();
+                    if (!SERVERS_LIST.includes(data.guild.id)) {
                         let content = msg.content.replace(
-                            INVITATION_REGEX,
+                            inviteCode,
                             "{Invitation censurée}"
                         );
                         content = content.replace(
