@@ -9,7 +9,19 @@ export default class PingCommand extends Command {
             client,
             {
                 name: "raidmode",
-                description: "Activer le mode raid"
+                description: "Activer le mode raid",
+                options: [
+                    {
+                        type: "SUB_COMMAND",
+                        name: "enable",
+                        description: "Activer le raidmode"
+                    },
+                    {
+                        type: "SUB_COMMAND",
+                        name: "disable",
+                        description: "Désactiver le raimode"
+                    }
+                ]
             },
             {
                 ownerOnly: true
@@ -17,12 +29,12 @@ export default class PingCommand extends Command {
         );
     }
     async run(inter: CommandInteraction): Promise<void> {
-        if (this.data.get("raidmode")) {
-            inter.reply("Le raidmode était activé. Il a été désactivé");
-            this.data.set("raidmode", false);
-        } else {
+        if (inter.options.getSubcommand() === "enable") {
             inter.reply("Le raidmode a été activé!");
             this.data.set("raidmode", true);
+        } else if (inter.options.getSubcommand() === "disable") {
+            inter.reply("Le raidmode a été désactivé");
+            this.data.set("raidmode", false);
         }
     }
 }
