@@ -54,6 +54,12 @@ export default class PingCommand extends Command {
                                         required: true
                                     }
                                 ]
+                            },
+                            {
+                                type: "SUB_COMMAND",
+                                name: "list",
+                                description:
+                                    "Lister les utilisateurs/trices qui ont la permission de passer à travers le raidmode"
                             }
                         ]
                     }
@@ -178,6 +184,27 @@ export default class PingCommand extends Command {
                         "RAIMODE"
                     );
                 }
+            } else {
+                inter.reply({
+                    embeds: [
+                        {
+                            title: "Liste des personnes autorisées à passer à travers le raidmode",
+                            description: `${
+                                (
+                                    (this.data.get(
+                                        "allowedUsers"
+                                    ) as string[]) || []
+                                ).length > 0
+                                    ? (
+                                          this.data.get(
+                                              "allowedUsers"
+                                          ) as string[]
+                                      ).join(",")
+                                    : "Personne n'est autorisé à passer à travers le raidmode"
+                            }`
+                        }
+                    ]
+                });
             }
         }
     }
