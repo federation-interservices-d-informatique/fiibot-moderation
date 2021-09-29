@@ -20,6 +20,42 @@ export default class PingCommand extends Command {
                         type: "SUB_COMMAND",
                         name: "disable",
                         description: "Désactiver le raimode"
+                    },
+                    {
+                        type: "SUB_COMMAND_GROUP",
+                        name: "user",
+                        description:
+                            "Autoriser/interdir à un utilisateur de passer à travers le raidmode",
+                        options: [
+                            {
+                                type: "SUB_COMMAND",
+                                name: "allow",
+                                description:
+                                    "Autoriser un utilisateur à passer à travers le raidmode",
+                                options: [
+                                    {
+                                        type: "STRING",
+                                        name: "user",
+                                        description: "L'utilisateur",
+                                        required: true
+                                    }
+                                ]
+                            },
+                            {
+                                type: "SUB_COMMAND",
+                                name: "deny",
+                                description:
+                                    "Interdir à un utilisateur de passer à travers le raidmode",
+                                options: [
+                                    {
+                                        type: "STRING",
+                                        name: "user",
+                                        description: "L'utilisateur à interdir",
+                                        required: true
+                                    }
+                                ]
+                            }
+                        ]
                     }
                 ]
             },
@@ -64,6 +100,40 @@ export default class PingCommand extends Command {
                     `Can't sent raidmode logs: ${e}`,
                     "RAIMODE"
                 );
+            }
+        } else if (inter.options.getSubcommandGroup() === "user") {
+            if (inter.options.getSubcommand() === "allow") {
+                const user = inter.options.get("user").value.toString();
+                if (isNaN(user as unknown as number)) {
+                    inter.reply("Utilisateur invalide!");
+                    return;
+                }
+                const allowed: string[] =
+                    (this.data.get("allowedUsers") as string[]) || [];
+                allowed.push(user);
+
+                inter.reply(
+                    `Utilisateur autorisé!\nListe des utilisateurs autorisés: ${allowed.join(
+                        ", "
+                    )}`
+                );
+                this.data.set("allowedUsers", allowed);
+            } else if (inter.options.getSubcommand() === "deny") {
+                const user = inter.options.get("user").value.toString();
+                if (isNaN(user as unknown as number)) {
+                    inter.reply("Utilisateur invalide!");
+                    return;
+                }
+                let allowed: string[] =
+                    (this.data.get("allowedUsers") as string[]) || [];
+                allowed = allowed.filter((f) => f !== user);
+
+                inter.reply(
+                    `Utilisateur interdit\nListe des utilisateurs autorisés: ${allowed.join(
+                        ", "
+                    )}`
+                );
+                this.data.set("allowedUsers", allowed);
             }
         }
     }

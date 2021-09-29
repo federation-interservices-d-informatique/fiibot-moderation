@@ -46,7 +46,7 @@ client.eventManager.registerEvent(
             if (
                 (
                     (client.commandManager.commands
-                        .get("allowuser")
+                        .get("raidmode")
                         .data.get("allowedUsers") as string[]) || []
                 ).includes(member.user.id)
             )
