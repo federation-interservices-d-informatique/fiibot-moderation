@@ -9,7 +9,7 @@ export default class PingCommand extends Command {
             client,
             {
                 name: "raidmode",
-                description: "Activer le mode raid",
+                description: "Gérer le raidmode",
                 options: [
                     {
                         type: "SUB_COMMAND",
