@@ -112,12 +112,34 @@ export default class PingCommand extends Command {
                     (this.data.get("allowedUsers") as string[]) || [];
                 allowed.push(user);
 
-                inter.reply(
-                    `Utilisateur autorisé!\nListe des utilisateurs autorisés: ${allowed.join(
-                        ", "
-                    )}`
-                );
+                inter.reply({
+                    embeds: [
+                        {
+                            title: "Utilisateur/trice autorisé(e) !",
+                            color: "GREEN"
+                        }
+                    ]
+                });
                 this.data.set("allowedUsers", allowed);
+                try {
+                    const raidmodeHook = new WebhookClient({
+                        id: process.env.RAIDMODE_HOOK_ID,
+                        token: process.env.RAIDMODE_HOOK_TOKEN
+                    });
+                    await raidmodeHook.send({
+                        embeds: [
+                            {
+                                description: `L'utilisateur/trice ${user} a été autorisé(e) à passer à travers le raidmode`,
+                                color: "YELLOW"
+                            }
+                        ]
+                    });
+                } catch (e) {
+                    this.client.logger.error(
+                        `Can't send raidmode logs (ALLOWED USER ${user})`,
+                        "RAIMODE"
+                    );
+                }
             } else if (inter.options.getSubcommand() === "deny") {
                 const user = inter.options.get("user").value.toString();
                 if (isNaN(user as unknown as number)) {
@@ -128,12 +150,34 @@ export default class PingCommand extends Command {
                     (this.data.get("allowedUsers") as string[]) || [];
                 allowed = allowed.filter((f) => f !== user);
 
-                inter.reply(
-                    `Utilisateur interdit\nListe des utilisateurs autorisés: ${allowed.join(
-                        ", "
-                    )}`
-                );
+                inter.reply({
+                    embeds: [
+                        {
+                            title: "Utilisateur/trice n'a plus l'autorisation de passer à travers le raidmode!",
+                            color: "GREEN"
+                        }
+                    ]
+                });
                 this.data.set("allowedUsers", allowed);
+                try {
+                    const raidmodeHook = new WebhookClient({
+                        id: process.env.RAIDMODE_HOOK_ID,
+                        token: process.env.RAIDMODE_HOOK_TOKEN
+                    });
+                    await raidmodeHook.send({
+                        embeds: [
+                            {
+                                description: `L'utilisateur/trice ${user} n'a plus l'autorisation de passer à travers le raidmode`,
+                                color: "YELLOW"
+                            }
+                        ]
+                    });
+                } catch (e) {
+                    this.client.logger.error(
+                        `Can't send raidmode logs (DENY USER ${user})`,
+                        "RAIMODE"
+                    );
+                }
             }
         }
     }
