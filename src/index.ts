@@ -45,9 +45,9 @@ client.eventManager.registerEvent(
             if (client.isOwner(member.user)) return;
             if (
                 (
-                    client.commandManager.commands
+                    (client.commandManager.commands
                         .get("allowuser")
-                        .data.get("allowedUsers") as string[]
+                        .data.get("allowedUsers") as string[]) || []
                 ).includes(member.user.id)
             )
                 return;
