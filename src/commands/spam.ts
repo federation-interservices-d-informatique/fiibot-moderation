@@ -20,7 +20,11 @@ export default class PingCommand extends Command {
                                 type: "CHANNEL",
                                 name: "salon",
                                 description: "Le salon à ignorer",
-                                required: true
+                                required: true,
+                                channelTypes: [
+                                    "GUILD_TEXT",
+                                    "GUILD_PUBLIC_THREAD"
+                                ]
                             }
                         ]
                     },
@@ -34,7 +38,11 @@ export default class PingCommand extends Command {
                                 name: "salon",
                                 description:
                                     "Le salon dans lequel interdir le spam",
-                                required: true
+                                required: true,
+                                channelTypes: [
+                                    "GUILD_TEXT",
+                                    "GUILD_PUBLIC_THREAD"
+                                ]
                             }
                         ]
                     }
@@ -47,16 +55,6 @@ export default class PingCommand extends Command {
         const channel = inter.options.get("salon").channel;
         if (inter.options.getSubcommand() === "allow") {
             const allowChansStoreKey = `${inter.guild.id}-allowedchannels`;
-            if (
-                channel.type !== "GUILD_TEXT" &&
-                channel.type !== "GUILD_PUBLIC_THREAD" &&
-                channel.type !== "GUILD_PRIVATE_THREAD"
-            ) {
-                return inter.reply({
-                    content: `Le canal est de type \`${channel.type}\`, qui ne peut pas être ignoré.`,
-                    ephemeral: true
-                });
-            }
             const allowedChannels =
                 (await this.client.dbclient.get<Array<string>>(
                     allowChansStoreKey
