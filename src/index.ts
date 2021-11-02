@@ -34,6 +34,13 @@ const tedisClient = new Tedis({
 
 tedisClient.on("error", client.logger.error);
 
+client.on("ready", async () => {
+    await client.user.setActivity({
+        name: "La FII",
+        type: "WATCHING"
+    });
+});
+
 client.eventManager.registerEvent(
     "checkraidmode",
     "guildMemberAdd",
