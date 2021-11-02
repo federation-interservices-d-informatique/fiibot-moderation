@@ -74,6 +74,10 @@ export default class PingCommand extends Command {
         if (inter.options.getSubcommand() === "enable") {
             inter.reply("Le raidmode a été activé!");
             this.data.set("raidmode", true);
+            this.client.user.setActivity({
+                type: "PLAYING",
+                name: "protéger la FII"
+            });
             try {
                 const raidModeHook = new WebhookClient({
                     id: process.env.RAIDMODE_HOOK_ID,
@@ -92,6 +96,10 @@ export default class PingCommand extends Command {
         } else if (inter.options.getSubcommand() === "disable") {
             inter.reply("Le raidmode a été désactivé");
             this.data.set("raidmode", false);
+            await this.client.user.setActivity({
+                type: "WATCHING",
+                name: "La FII"
+            });
             try {
                 const raidModeHook = new WebhookClient({
                     id: process.env.RAIDMODE_HOOK_ID,
