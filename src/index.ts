@@ -1,6 +1,5 @@
 import { fiiClient } from "@federation-interservices-d-informatique/fiibot-common";
-import { CommandInteraction, GuildMember, Invite, Message } from "discord.js";
-import fetch from "node-fetch";
+import { CommandInteraction, GuildMember, Message } from "discord.js";
 import { getDirname } from "./utils/getdirname.js";
 import { Tedis } from "tedis";
 import { INVITATION_REGEX, SERVERS_LIST } from "./utils/constants.js";
@@ -192,16 +191,13 @@ client.eventManager.registerEvent(
                 const splitted = link.split("/");
                 const inviteCode = splitted[splitted.length - 1];
                 try {
-                    const response = await fetch(
-                        `https://discord.com/api/v9/invites/${inviteCode}`
-                    );
-                    if (!response.ok)
+                    const data = await client.fetchInvite(inviteCode);
+                    if (!data)
                         return client.logger.warn(
                             `Detected invalid invite ${inviteCode}`,
                             "PROCESSINVITES"
                         );
-                    const data: Invite =
-                        (await response.json()) as unknown as Invite;
+
                     if (!data.guild) return await msg.delete();
                     if (!SERVERS_LIST.includes(data.guild.id)) {
                         let content = msg.content.replace(
@@ -216,7 +212,7 @@ client.eventManager.registerEvent(
                             /<@&[0-9]{18}>/gim,
                             "`Mention de rôle`"
                         );
-                        if (!msg.deleted && msg.deletable) await msg.delete();
+                        if (msg.deletable) await msg.delete();
                         if (msg.channel.type === "GUILD_TEXT") {
                             const hooks = await msg.channel.fetchWebhooks();
                             let hook = hooks
