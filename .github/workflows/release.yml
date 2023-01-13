@@ -49,7 +49,7 @@ jobs:
       - name: Gen changelog
         run: bash .github/bin/genlog.sh
       - id: tag
-        run: tag=$(echo ${GITHUB_REF##*/}) >> "${GITHUB_OUTPUT}"
+        run: echo tag=$(echo ${GITHUB_REF##*/}) >> "${GITHUB_OUTPUT}"
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
