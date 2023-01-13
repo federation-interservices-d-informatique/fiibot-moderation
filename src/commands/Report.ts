@@ -1,34 +1,36 @@
 import {
-    CommandInteraction,
-    ContextMenuInteraction,
-    WebhookClient
+    ApplicationCommandType,
+    CacheType,
+    MessageContextMenuCommandInteraction,
+    WebhookClient,
+    Colors
 } from "discord.js";
 import {
-    fiiClient,
-    Command
+    BotInteraction,
+    FiiClient
 } from "@federation-interservices-d-informatique/fiibot-common";
-import { Constants } from "discord.js";
-export default class PingCommand extends Command {
-    constructor(client: fiiClient) {
-        super(
-            client,
-            {
-                type: Constants.ApplicationCommandTypes.MESSAGE,
-                name: "Report"
-            },
-            { guildOnly: true }
-        );
+export default class PingCommand extends BotInteraction {
+    constructor(client: FiiClient) {
+        super(client, {
+            name: "Report",
+            type: ApplicationCommandType.Message,
+            dmPermission: false
+        });
     }
-    async run(inter: CommandInteraction): Promise<void> {
+    async runMessageContextMenuCommand(
+        inter: MessageContextMenuCommandInteraction<CacheType>
+    ): Promise<void> {
         if (!inter.guild) return;
-        const menu = inter as ContextMenuInteraction;
-        const message = await inter.channel.messages.fetch(menu.targetId);
-        if (!process.env.REPORT_HOOK_TOKEN || !process.env.REPORT_HOOK_ID)
-            return await inter.reply({
+        const message = await inter.channel?.messages.fetch(inter.targetId);
+        if (!message) return;
+        if (!process.env.REPORT_HOOK_TOKEN || !process.env.REPORT_HOOK_ID) {
+            await inter.reply({
                 ephemeral: true,
                 content:
                     "Il semblerait que le système de signalement soit incorrectement configuré. Nous vous prions de réessayer plus tard."
             });
+            return;
+        }
 
         const webhookClient = new WebhookClient({
             id: process.env.REPORT_HOOK_ID,
@@ -51,14 +53,14 @@ export default class PingCommand extends Command {
                                 value: `\`${message.content}\``
                             }
                         ],
-                        color: "RANDOM",
+                        color: Colors.Red,
                         footer: {
                             text: `Signalement de ${message.author.tag}`,
-                            iconURL: message.author.displayAvatarURL()
+                            icon_url: message.author.displayAvatarURL()
                         },
                         author: {
-                            iconURL: inter.user.displayAvatarURL(),
-                            name: inter.user.tag
+                            name: inter.user.tag,
+                            icon_url: inter.user.displayAvatarURL()
                         }
                     }
                 ]
@@ -70,7 +72,7 @@ export default class PingCommand extends Command {
                     "Impossible d'envoyer le signalement. Veuillez contacter <@743851266635071710> pour plus de détails."
             });
             this.client.logger.error(
-                `Unable to send report of ${message.author.id} for message ${message.id} in ${message.guild.name}: ${e}`,
+                `Unable to send report of ${message.author.id} for message ${message.id} in ${message.guild?.name}: ${e}`,
                 "REPORTS"
             );
             return;

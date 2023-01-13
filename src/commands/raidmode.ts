@@ -1,10 +1,16 @@
-import { CommandInteraction, WebhookClient } from "discord.js";
 import {
-    fiiClient,
-    Command
+    ActivityType,
+    ApplicationCommandOptionType,
+    ChatInputCommandInteraction,
+    Colors,
+    WebhookClient
+} from "discord.js";
+import {
+    FiiClient,
+    BotInteraction
 } from "@federation-interservices-d-informatique/fiibot-common";
-export default class PingCommand extends Command {
-    constructor(client: fiiClient) {
+export default class PingCommand extends BotInteraction {
+    constructor(client: FiiClient) {
         super(
             client,
             {
@@ -12,29 +18,29 @@ export default class PingCommand extends Command {
                 description: "Gérer le raidmode",
                 options: [
                     {
-                        type: "SUB_COMMAND",
+                        type: ApplicationCommandOptionType.Subcommand,
                         name: "enable",
                         description: "Activer le raidmode"
                     },
                     {
-                        type: "SUB_COMMAND",
+                        type: ApplicationCommandOptionType.Subcommand,
                         name: "disable",
                         description: "Désactiver le raimode"
                     },
                     {
-                        type: "SUB_COMMAND_GROUP",
+                        type: ApplicationCommandOptionType.SubcommandGroup,
                         name: "user",
                         description:
                             "Autoriser/interdir à un utilisateur de passer à travers le raidmode",
                         options: [
                             {
-                                type: "SUB_COMMAND",
+                                type: ApplicationCommandOptionType.Subcommand,
                                 name: "allow",
                                 description:
                                     "Autoriser un utilisateur à passer à travers le raidmode",
                                 options: [
                                     {
-                                        type: "STRING",
+                                        type: ApplicationCommandOptionType.String,
                                         name: "user",
                                         description: "L'utilisateur",
                                         required: true
@@ -42,13 +48,13 @@ export default class PingCommand extends Command {
                                 ]
                             },
                             {
-                                type: "SUB_COMMAND",
+                                type: ApplicationCommandOptionType.Subcommand,
                                 name: "deny",
                                 description:
                                     "Interdir à un utilisateur de passer à travers le raidmode",
                                 options: [
                                     {
-                                        type: "STRING",
+                                        type: ApplicationCommandOptionType.String,
                                         name: "user",
                                         description: "L'utilisateur à interdir",
                                         required: true
@@ -56,7 +62,7 @@ export default class PingCommand extends Command {
                                 ]
                             },
                             {
-                                type: "SUB_COMMAND",
+                                type: ApplicationCommandOptionType.Subcommand,
                                 name: "list",
                                 description:
                                     "Lister les utilisateurs/trices qui ont la permission de passer à travers le raidmode"
@@ -70,18 +76,20 @@ export default class PingCommand extends Command {
             }
         );
     }
-    async run(inter: CommandInteraction): Promise<void> {
+    async runChatInputCommand(
+        inter: ChatInputCommandInteraction
+    ): Promise<void> {
         if (inter.options.getSubcommand() === "enable") {
             inter.reply("Le raidmode a été activé!");
             this.data.set("raidmode", true);
-            this.client.user.setActivity({
-                type: "PLAYING",
+            this.client.user?.setActivity({
+                type: ActivityType.Playing,
                 name: "protéger la FII"
             });
             try {
                 const raidModeHook = new WebhookClient({
-                    id: process.env.RAIDMODE_HOOK_ID,
-                    token: process.env.RAIDMODE_HOOK_TOKEN
+                    id: process.env.RAIDMODE_HOOK_ID ?? "",
+                    token: process.env.RAIDMODE_HOOK_TOKEN ?? ""
                 });
 
                 await raidModeHook.send({
@@ -96,14 +104,14 @@ export default class PingCommand extends Command {
         } else if (inter.options.getSubcommand() === "disable") {
             inter.reply("Le raidmode a été désactivé");
             this.data.set("raidmode", false);
-            await this.client.user.setActivity({
-                type: "WATCHING",
+            await this.client.user?.setActivity({
+                type: ActivityType.Watching,
                 name: "La FII"
             });
             try {
                 const raidModeHook = new WebhookClient({
-                    id: process.env.RAIDMODE_HOOK_ID,
-                    token: process.env.RAIDMODE_HOOK_TOKEN
+                    id: process.env.RAIDMODE_HOOK_ID ?? "",
+                    token: process.env.RAIDMODE_HOOK_TOKEN ?? ""
                 });
 
                 await raidModeHook.send({
@@ -117,7 +125,9 @@ export default class PingCommand extends Command {
             }
         } else if (inter.options.getSubcommandGroup() === "user") {
             if (inter.options.getSubcommand() === "allow") {
-                const user = inter.options.get("user").value.toString();
+                const user = inter.options.getString("user");
+                if (!user) return;
+
                 if (isNaN(user as unknown as number)) {
                     inter.reply("Utilisateur invalide!");
                     return;
@@ -130,21 +140,21 @@ export default class PingCommand extends Command {
                     embeds: [
                         {
                             title: "Utilisateur/trice autorisé(e) !",
-                            color: "GREEN"
+                            color: Colors.Green
                         }
                     ]
                 });
                 this.data.set("allowedUsers", allowed);
                 try {
                     const raidmodeHook = new WebhookClient({
-                        id: process.env.RAIDMODE_HOOK_ID,
-                        token: process.env.RAIDMODE_HOOK_TOKEN
+                        id: process.env.RAIDMODE_HOOK_ID ?? "",
+                        token: process.env.RAIDMODE_HOOK_TOKEN ?? ""
                     });
                     await raidmodeHook.send({
                         embeds: [
                             {
                                 description: `L'utilisateur/trice ${user} a été autorisé(e) à passer à travers le raidmode`,
-                                color: "YELLOW"
+                                color: Colors.Yellow
                             }
                         ]
                     });
@@ -155,7 +165,9 @@ export default class PingCommand extends Command {
                     );
                 }
             } else if (inter.options.getSubcommand() === "deny") {
-                const user = inter.options.get("user").value.toString();
+                const user = inter.options.getString("user");
+                if (!user) return;
+
                 if (isNaN(user as unknown as number)) {
                     inter.reply("Utilisateur invalide!");
                     return;
@@ -168,21 +180,21 @@ export default class PingCommand extends Command {
                     embeds: [
                         {
                             title: "Utilisateur/trice n'a plus l'autorisation de passer à travers le raidmode!",
-                            color: "GREEN"
+                            color: Colors.Green
                         }
                     ]
                 });
                 this.data.set("allowedUsers", allowed);
                 try {
                     const raidmodeHook = new WebhookClient({
-                        id: process.env.RAIDMODE_HOOK_ID,
-                        token: process.env.RAIDMODE_HOOK_TOKEN
+                        id: process.env.RAIDMODE_HOOK_ID ?? "",
+                        token: process.env.RAIDMODE_HOOK_TOKEN ?? ""
                     });
                     await raidmodeHook.send({
                         embeds: [
                             {
                                 description: `L'utilisateur/trice ${user} n'a plus l'autorisation de passer à travers le raidmode`,
-                                color: "YELLOW"
+                                color: Colors.Yellow
                             }
                         ]
                     });

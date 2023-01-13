@@ -1,6 +1,6 @@
 import { Invite } from "discord.js";
 
-export const INVITATION_REGEX = Invite.INVITES_PATTERN;
+export const INVITATION_REGEX = Invite.InvitesPattern;
 
 export const SERVERS_LIST = [
     "706283053160464395",
