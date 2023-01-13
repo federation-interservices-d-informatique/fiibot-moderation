@@ -1,19 +1,32 @@
-import { fiiClient } from "@federation-interservices-d-informatique/fiibot-common";
-import { CommandInteraction, GuildMember, Message } from "discord.js";
-import { getDirname } from "./utils/getdirname.js";
+import {
+    FiiClient,
+    getDirname
+} from "@federation-interservices-d-informatique/fiibot-common";
+import {
+    ActivityType,
+    ChannelType,
+    Colors,
+    GatewayIntentBits,
+    GuildMember,
+    Message
+} from "discord.js";
 import { Tedis } from "tedis";
 import { INVITATION_REGEX, SERVERS_LIST } from "./utils/constants.js";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const client = new fiiClient(
+const client = new FiiClient(
     {
-        intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_MESSAGES"]
+        intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
     },
     {
-        commandManagerSettings: {
-            commandsPath: [`${getDirname(import.meta.url)}/commands`]
+        managersSettings: {
+            interactionsManagerSettings: {
+                interactionsPaths: [`${getDirname(import.meta.url)}/commands`]
+            },
+            eventsManagerSettings: {
+                eventsPaths: []
+            }
         },
-        owners: process.env.OWNERS.split(",").map((o) => parseInt(o)),
-        token: process.env.BOT_TOKEN
+        token: process.env.BOT_TOKEN ?? ""
     },
     {
         dbConfig: {
@@ -27,16 +40,16 @@ const client = new fiiClient(
 );
 
 const tedisClient = new Tedis({
-    port: parseInt(process.env.REDIS_PORT),
+    port: parseInt(process.env.REDIS_PORT ?? "6379"),
     host: process.env.REDIS_HOST
 });
 
 tedisClient.on("error", client.logger.error);
 
 client.on("ready", async () => {
-    await client.user.setActivity({
+    await client.user?.setActivity({
         name: "La FII",
-        type: "WATCHING"
+        type: ActivityType.Watching
     });
 });
 
@@ -46,14 +59,16 @@ client.eventManager.registerEvent(
     async (member: GuildMember) => {
         if (member.user.bot) return;
         if (
-            client.commandManager.commands.get("raidmode").data.get("raidmode")
+            client.interactionManager?.interactions
+                .get("raidmode")
+                ?.data.get("raidmode")
         ) {
             if (client.isOwner(member.user)) return;
             if (
                 (
-                    (client.commandManager.commands
+                    (client.interactionManager?.interactions
                         .get("raidmode")
-                        .data.get("allowedUsers") as string[]) || []
+                        ?.data.get("allowedUsers") as string[]) || []
                 ).includes(member.user.id)
             )
                 return;
@@ -64,7 +79,7 @@ client.eventManager.registerEvent(
                             title: `Vous avez été expulsé(e) de ${member.guild.name}`,
                             description:
                                 "Le serveur se trouve actuellement en mode raid, merci de réessayer plus tard.",
-                            color: "RED"
+                            color: Colors.Red
                         }
                     ]
                 });
@@ -94,13 +109,13 @@ client.eventManager.registerEvent(
         /** Skip DMs and bots*/
         if (!msg.guild || msg.author.bot) return;
         if (
-            msg.member.permissions.has("BAN_MEMBERS") ||
+            msg.member?.permissions.has("BanMembers") ||
             client.isOwner(msg.author)
         )
             return;
 
         const allowedChans =
-            (await client.dbclient.get<Array<string>>(
+            (await client.dbClient?.get<Array<string>>(
                 `${msg.guildId}-allowedchannels`
             )) || [];
 
@@ -131,7 +146,7 @@ client.eventManager.registerEvent(
                         if (message.deletable) await message.delete();
                     } catch (e) {
                         client.logger.error(
-                            `Can't delete spam messages in ${msg.guild.name}`
+                            `Can't delete spam messages in ${msg.guild?.name}`
                         );
                     }
                 });
@@ -144,7 +159,7 @@ client.eventManager.registerEvent(
                         embeds: [
                             {
                                 title: `Expulsion de ${msg.guild.name}`,
-                                color: "RED",
+                                color: Colors.Red,
                                 description: `Vous avez été expulsé(e) de ${msg.guild.name} pour Spam.`
                             }
                         ]
@@ -155,7 +170,7 @@ client.eventManager.registerEvent(
                         "ANTISPAM"
                     );
                 }
-                if (msg.member.kickable) msg.member.kick("Spam");
+                if (msg.member?.kickable) msg.member.kick("Spam");
                 msg.channel.send(
                     `${msg.author.tag} (${msg.author.id}) a été expulsé(e) pour Spam`
                 );
@@ -180,11 +195,12 @@ client.eventManager.registerEvent(
         if (msg.author.bot || !msg.member) return;
         if (
             client.isOwner(msg.author) ||
-            msg.member.permissions.has("ADMINISTRATOR")
+            msg.member.permissions.has("Administrator")
         )
             return;
         if (INVITATION_REGEX.test(msg.content)) {
             const invitationLink = msg.content.match(INVITATION_REGEX);
+            if (!invitationLink) return;
             if (invitationLink.length >= 5 && msg.deletable)
                 return await msg.delete();
             invitationLink.every(async (link) => {
@@ -213,25 +229,26 @@ client.eventManager.registerEvent(
                             "`Mention de rôle`"
                         );
                         if (msg.deletable) await msg.delete();
-                        if (msg.channel.type === "GUILD_TEXT") {
+                        if (msg.channel.type === ChannelType.GuildText) {
                             const hooks = await msg.channel.fetchWebhooks();
                             let hook = hooks
                                 .filter((h) => h.name === "FIIBOT")
                                 .first();
                             if (!hook) {
-                                hook = await msg.channel.createWebhook(
-                                    "FIIBOT"
-                                );
+                                hook = await msg.channel.createWebhook({
+                                    name: "FIIBOT"
+                                });
                             }
                             hook.send({
                                 content,
                                 username: msg.author.username,
-                                avatarURL: msg.author.avatarURL()
+                                avatarURL: msg.author.displayAvatarURL()
                             });
                             return false;
                         } else if (
-                            msg.channel.type === "GUILD_PRIVATE_THREAD" ||
-                            msg.channel.type === "GUILD_PUBLIC_THREAD"
+                            msg.channel.type ===
+                                ChannelType.GuildPrivateThread ||
+                            msg.channel.type === ChannelType.GuildPublicThread
                         ) {
                             msg.channel.send(`DE ${msg.author}: ${content}`);
                             return false;
@@ -244,28 +261,6 @@ client.eventManager.registerEvent(
                     );
                 }
             });
-        }
-    }
-);
-
-client.eventManager.registerEvent(
-    "handleReportMenu",
-    "interactionCreate",
-    async (interaction: CommandInteraction) => {
-        if (interaction.isContextMenu()) {
-            if (interaction.commandName === "Report") {
-                const cmd = client.commandManager.commands.get("Report");
-                if (
-                    !cmd.hasBotPermission(interaction) ||
-                    !cmd.hasPermission(interaction)
-                )
-                    return;
-                try {
-                    cmd.run(interaction);
-                } catch (e) {
-                    console.log(e);
-                }
-            }
         }
     }
 );
