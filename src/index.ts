@@ -1,6 +1,7 @@
 import {
     FiiClient,
-    getDirname
+    getDirname,
+    SERVERS_LIST
 } from "@federation-interservices-d-informatique/fiibot-common";
 import {
     ActivityType,
@@ -11,7 +12,7 @@ import {
     Message
 } from "discord.js";
 import { Tedis } from "tedis";
-import { INVITATION_REGEX, SERVERS_LIST } from "./utils/constants.js";
+import { INVITATION_REGEX } from "./utils/constants.js";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const client = new FiiClient(
     {
