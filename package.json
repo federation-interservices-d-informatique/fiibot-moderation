@@ -27,20 +27,20 @@
     },
     "homepage": "https://github.com/federation-interservices-d-informatique/fiibot-template#readme",
     "devDependencies": {
-        "@types/jest": "^29.2.5",
+        "@types/jest": "^29.4.0",
         "@types/node": "^18.11.18",
-        "@typescript-eslint/eslint-plugin": "^5.48.1",
-        "@typescript-eslint/parser": "^5.48.1",
-        "eslint": "^8.31.0",
+        "@typescript-eslint/eslint-plugin": "^5.50.0",
+        "@typescript-eslint/parser": "^5.50.0",
+        "eslint": "^8.33.0",
         "eslint-config-prettier": "^8.6.0",
         "eslint-plugin-prettier": "^4.2.1",
-        "jest": "^29.3.1",
-        "prettier": "^2.8.2",
+        "jest": "^29.4.1",
+        "prettier": "^2.8.3",
         "ts-jest": "^29.0.5",
-        "typescript": "^4.9.4"
+        "typescript": "^4.9.5"
     },
     "dependencies": {
-        "@federation-interservices-d-informatique/fiibot-common": "^4.0.3",
+        "@federation-interservices-d-informatique/fiibot-common": "^4.0.6",
         "discord.js": "^14.7.1",
         "tedis": "^0.1.12"
     }
