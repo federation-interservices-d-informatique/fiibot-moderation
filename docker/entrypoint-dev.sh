@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 set -e
 
-NODE_PATH="${PWD}/node_modules" node "${PWD}/docker/wait-for-postgres.js"
+NODE_PATH="${PWD}/node_modules" bun "${PWD}/docker/wait-for-postgres.js"
 echo "Starting bot!"
-nodemon --watch 'src/*' --ext 'ts' --exec 'npm run start-build'
+bun run --watch src/index.ts
