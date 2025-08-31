@@ -80,7 +80,7 @@ export default class PingCommand extends BotInteraction {
         inter: ChatInputCommandInteraction
     ): Promise<void> {
         if (inter.options.getSubcommand() === "enable") {
-            inter.reply("Le raidmode a été activé!");
+            await inter.reply("Le raidmode a été activé!");
             this.data.set("raidmode", true);
             this.client.user?.setActivity({
                 type: ActivityType.Playing,
@@ -93,18 +93,19 @@ export default class PingCommand extends BotInteraction {
                 });
 
                 await raidModeHook.send({
-                    content: `Le raimode a été activé par ${inter.user.tag} (${inter.user.id}) sur ${inter.guildId}`
+                    content: `Le raimode a été activé par ${inter.user.tag} (${inter.user.id}) sur ${inter.guildId ?? ""}`
                 });
             } catch (e) {
-                this.client.logger.error(
-                    `Can't sent raidmode logs: ${e}`,
-                    "RAIMODE"
-                );
+                if (e instanceof Error)
+                    this.client.logger.error(
+                        `Can't sent raidmode logs: ${e}`,
+                        "RAIMODE"
+                    );
             }
         } else if (inter.options.getSubcommand() === "disable") {
-            inter.reply("Le raidmode a été désactivé");
+            await inter.reply("Le raidmode a été désactivé");
             this.data.set("raidmode", false);
-            await this.client.user?.setActivity({
+            this.client.user?.setActivity({
                 type: ActivityType.Watching,
                 name: "La FII"
             });
@@ -115,13 +116,14 @@ export default class PingCommand extends BotInteraction {
                 });
 
                 await raidModeHook.send({
-                    content: `Le raimode a été désactivé par ${inter.user.tag} (${inter.user.id}) sur ${inter.guildId}`
+                    content: `Le raimode a été désactivé par ${inter.user.tag} (${inter.user.id}) sur ${inter.guildId ?? ""}`
                 });
             } catch (e) {
-                this.client.logger.error(
-                    `Can't sent raidmode logs: ${e}`,
-                    "RAIMODE"
-                );
+                if (e instanceof Error)
+                    this.client.logger.error(
+                        `Can't sent raidmode logs: ${e}`,
+                        "RAIMODE"
+                    );
             }
         } else if (inter.options.getSubcommandGroup() === "user") {
             if (inter.options.getSubcommand() === "allow") {
@@ -129,14 +131,14 @@ export default class PingCommand extends BotInteraction {
                 if (!user) return;
 
                 if (isNaN(user as unknown as number)) {
-                    inter.reply("Utilisateur invalide!");
+                    await inter.reply("Utilisateur invalide!");
                     return;
                 }
                 const allowed: string[] =
-                    (this.data.get("allowedUsers") as string[]) || [];
+                    (this.data.get("allowedUsers") as string[] | undefined) ?? [];
                 allowed.push(user);
 
-                inter.reply({
+                await inter.reply({
                     embeds: [
                         {
                             title: "Utilisateur/trice autorisé(e) !",
@@ -159,24 +161,25 @@ export default class PingCommand extends BotInteraction {
                         ]
                     });
                 } catch (e) {
-                    this.client.logger.error(
-                        `Can't send raidmode logs (ALLOWED USER ${user})`,
-                        "RAIMODE"
-                    );
+                    if (e instanceof Error)
+                        this.client.logger.error(
+                            `Can't send raidmode logs (ALLOWED USER ${user})`,
+                            "RAIMODE"
+                        );
                 }
             } else if (inter.options.getSubcommand() === "deny") {
                 const user = inter.options.getString("user");
                 if (!user) return;
 
                 if (isNaN(user as unknown as number)) {
-                    inter.reply("Utilisateur invalide!");
+                    await inter.reply("Utilisateur invalide!");
                     return;
                 }
                 let allowed: string[] =
-                    (this.data.get("allowedUsers") as string[]) || [];
+                    (this.data.get("allowedUsers") as string[] | undefined) ?? [];
                 allowed = allowed.filter((f) => f !== user);
 
-                inter.reply({
+                await inter.reply({
                     embeds: [
                         {
                             title: "Utilisateur/trice n'a plus l'autorisation de passer à travers le raidmode!",
@@ -199,29 +202,29 @@ export default class PingCommand extends BotInteraction {
                         ]
                     });
                 } catch (e) {
-                    this.client.logger.error(
-                        `Can't send raidmode logs (DENY USER ${user})`,
-                        "RAIMODE"
-                    );
+                    if (e instanceof Error)
+                        this.client.logger.error(
+                            `Can't send raidmode logs (DENY USER ${user})`,
+                            "RAIMODE"
+                        );
                 }
             } else {
-                inter.reply({
+                await inter.reply({
                     embeds: [
                         {
                             title: "Liste des personnes autorisées à passer à travers le raidmode",
-                            description: `${
+                            description:
                                 (
                                     (this.data.get(
                                         "allowedUsers"
-                                    ) as string[]) || []
+                                    ) as string[] | undefined) ?? []
                                 ).length > 0
                                     ? (
                                           this.data.get(
                                               "allowedUsers"
-                                          ) as string[]
+                                          ) as string[] | undefined ?? []
                                       ).join(",")
                                     : "Personne n'est autorisé à passer à travers le raidmode"
-                            }`
                         }
                     ]
                 });

@@ -6,11 +6,10 @@
     "type": "module",
     "scripts": {
         "build": "tsc",
-        "test": "echo \"Hello\"",
-        "lint": "eslint . -c .eslintrc.yml",
-        "lint-fix": "eslint . -c .eslintrc.yml --fix",
+        "lint": "eslint .",
+        "lint-fix": "eslint . --fix",
         "format": "prettier 'src/**/*.ts' --write",
-        "start-build": "tsc && node dist/index.js"
+        "start-build": "tsc && bun src/index.ts"
     },
     "repository": {
         "type": "git",

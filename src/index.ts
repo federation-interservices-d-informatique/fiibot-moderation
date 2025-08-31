@@ -9,11 +9,13 @@ import {
     Colors,
     GatewayIntentBits,
     GuildMember,
-    Message
+    Message,
+    PartialMessage,
+    TextChannel
 } from "discord.js";
 import { Tedis } from "tedis";
 import { INVITATION_REGEX } from "./utils/constants.js";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 const client = new FiiClient(
     {
         intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
@@ -47,8 +49,8 @@ const tedisClient = new Tedis({
 
 tedisClient.on("error", client.logger.error);
 
-client.on("ready", async () => {
-    await client.user?.setActivity({
+client.on("clientReady", async () => {
+    client.user?.setActivity({
         name: "La FII",
         type: ActivityType.Watching
     });
@@ -60,16 +62,16 @@ client.eventManager.registerEvent(
     async (member: GuildMember) => {
         if (member.user.bot) return;
         if (
-            client.interactionManager?.interactions
+            client.interactionManager.interactions
                 .get("raidmode")
                 ?.data.get("raidmode")
         ) {
             if (client.isOwner(member.user)) return;
             if (
                 (
-                    (client.interactionManager?.interactions
+                    (client.interactionManager.interactions
                         .get("raidmode")
-                        ?.data.get("allowedUsers") as string[]) || []
+                        ?.data.get("allowedUsers") as string[] | undefined) ?? []
                 ).includes(member.user.id)
             )
                 return;
@@ -85,18 +87,20 @@ client.eventManager.registerEvent(
                     ]
                 });
             } catch (e) {
-                client.logger.error(
-                    `Unable to DM ${member.user.username}`,
-                    "RAIDMODE"
-                );
+                if (e instanceof Error)
+                    client.logger.error(
+                        `Unable to DM ${member.user.username}, ${e}`,
+                        "RAIDMODE"
+                    );
             }
             try {
                 await member.kick("RAIDMODE");
             } catch (e) {
-                client.logger.error(
-                    `Can't kick ${member.user.username}`,
-                    "RAIDMODE"
-                );
+                if (e instanceof Error)
+                    client.logger.error(
+                        `Can't kick ${member.user.username}, ${e}`,
+                        "RAIDMODE"
+                    );
             }
         }
     }
@@ -106,7 +110,7 @@ client.eventManager.registerEvent(
     "antispam",
     "messageCreate",
     async (msg: Message) => {
-        if (msg.partial) await msg.fetch();
+        if ((msg as PartialMessage | Message).partial) await msg.fetch();
         /** Skip DMs and bots*/
         if (!msg.guild || msg.author.bot) return;
         if (
@@ -116,15 +120,15 @@ client.eventManager.registerEvent(
             return;
 
         const allowedChans =
-            (await client.dbClient?.get<Array<string>>(
-                `${msg.guildId}-allowedchannels`
-            )) || [];
+            (await client.dbClient?.get<string[]>(
+                `${msg.guildId ?? ""}-allowedchannels`
+            )) ?? [];
 
         if (allowedChans.includes(msg.channelId)) return;
 
         await tedisClient.lpush(
             msg.author.id,
-            `${msg.createdTimestamp}^${msg.id}`
+            `${msg.createdTimestamp.toString()}^${msg.id}`
         );
         const messages = await tedisClient.lrange(
             msg.author.id,
@@ -146,9 +150,10 @@ client.eventManager.registerEvent(
                         );
                         if (message.deletable) await message.delete();
                     } catch (e) {
-                        client.logger.error(
-                            `Can't delete spam messages in ${msg.guild?.name}`
-                        );
+                        if (e instanceof Error)
+                            client.logger.error(
+                                `Can't delete spam messages in ${msg.guild?.name ?? ""}, ${e}`
+                            );
                     }
                 });
                 try {
@@ -166,23 +171,24 @@ client.eventManager.registerEvent(
                         ]
                     });
                 } catch (e) {
-                    client.logger.error(
-                        `Can't dm ${msg.author.username}`,
-                        "ANTISPAM"
-                    );
+                    if (e instanceof Error)
+                        client.logger.error(
+                            `Can't dm ${msg.author.username}, ${e}`,
+                            "ANTISPAM"
+                        );
                 }
-                if (msg.member?.kickable) msg.member.kick("Spam");
-                msg.channel.send(
+                if (msg.member?.kickable) await msg.member.kick("Spam");
+                await (msg.channel as TextChannel).send(
                     `${msg.author.tag} (${msg.author.id}) a été expulsé(e) pour Spam`
                 );
-                tedisClient.del(msg.author.id);
+                await tedisClient.del(msg.author.id);
             } else {
                 if (
                     messages.length > 15 &&
                     (messages[0].split("^")[0] as unknown as number) >
                         msg.createdTimestamp - 60 * 1000
                 ) {
-                    tedisClient.del(msg.author.id);
+                    await tedisClient.del(msg.author.id);
                 }
             }
         }
@@ -202,13 +208,15 @@ client.eventManager.registerEvent(
         if (INVITATION_REGEX.test(msg.content)) {
             const invitationLink = msg.content.match(INVITATION_REGEX);
             if (!invitationLink) return;
-            if (invitationLink.length >= 5 && msg.deletable)
-                return await msg.delete();
+            if (invitationLink.length >= 5 && msg.deletable) {
+                await msg.delete();
+                return;
+            }
             invitationLink.every(async (link) => {
                 const splitted = link.split("/");
                 const inviteCode = splitted[splitted.length - 1];
                 try {
-                    const data = await client.fetchInvite(inviteCode);
+                    const data = await client.fetchInvite(inviteCode).catch(() => undefined);
                     if (!data)
                         return client.logger.warn(
                             `Detected invalid invite ${inviteCode}`,
@@ -235,12 +243,10 @@ client.eventManager.registerEvent(
                             let hook = hooks
                                 .filter((h) => h.name === "FIIBOT")
                                 .first();
-                            if (!hook) {
-                                hook = await msg.channel.createWebhook({
-                                    name: "FIIBOT"
-                                });
-                            }
-                            hook.send({
+                            hook ??= await msg.channel.createWebhook({
+                                name: "FIIBOT"
+                            });
+                            await hook.send({
                                 content,
                                 username: msg.author.username,
                                 avatarURL: msg.author.displayAvatarURL()
@@ -248,18 +254,19 @@ client.eventManager.registerEvent(
                             return false;
                         } else if (
                             msg.channel.type ===
-                                ChannelType.GuildPrivateThread ||
-                            msg.channel.type === ChannelType.GuildPublicThread
+                                ChannelType.PrivateThread ||
+                            msg.channel.type === ChannelType.PublicThread
                         ) {
-                            msg.channel.send(`DE ${msg.author}: ${content}`);
+                            await msg.channel.send(`DE ${msg.author.toString()}: ${content}`);
                             return false;
                         }
                     }
                 } catch (e) {
-                    client.logger.error(
-                        `Error when fetching ${link}: ${e}`,
-                        "processInvites"
-                    );
+                    if (e instanceof Error)
+                        client.logger.error(
+                            `Error when fetching ${link}: ${e}`,
+                            "processInvites"
+                        );
                 }
             });
         }

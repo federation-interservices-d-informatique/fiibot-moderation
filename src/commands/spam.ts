@@ -2,6 +2,7 @@ import {
     ApplicationCommandOptionType,
     ChannelType,
     ChatInputCommandInteraction,
+    MessageFlags,
     PermissionsBitField
 } from "discord.js";
 import {
@@ -26,7 +27,7 @@ export default class extends BotInteraction {
                             required: true,
                             channelTypes: [
                                 ChannelType.GuildText,
-                                ChannelType.GuildPublicThread
+                                ChannelType.PublicThread
                             ]
                         }
                     ]
@@ -44,7 +45,7 @@ export default class extends BotInteraction {
                             required: true,
                             channelTypes: [
                                 ChannelType.GuildText,
-                                ChannelType.GuildPublicThread
+                                ChannelType.PublicThread
                             ]
                         }
                     ]
@@ -60,15 +61,15 @@ export default class extends BotInteraction {
         const channel = inter.options.getChannel("salon");
         if (!channel) return;
         if (inter.options.getSubcommand() === "allow") {
-            const allowChansStoreKey = `${inter.guild?.id}-allowedchannels`;
+            const allowChansStoreKey = `${inter.guildId ?? ""}-allowedchannels`;
             const allowedChannels =
-                (await this.client.dbClient?.get<Array<string>>(
+                (await this.client.dbClient?.get<string[]>(
                     allowChansStoreKey
-                )) || [];
+                )) ?? [];
 
-            if (allowedChannels.includes(channel?.id ?? "")) {
-                inter.reply({
-                    ephemeral: true,
+            if (allowedChannels.includes(channel.id)) {
+                await inter.reply({
+                    flags: MessageFlags.Ephemeral,
                     content: "Le canal est déjà ignoré ! "
                 });
                 return;
@@ -79,20 +80,20 @@ export default class extends BotInteraction {
                 allowChansStoreKey,
                 allowedChannels
             );
-            inter.reply({
-                content: `Le canal ${channel.toString()} est maintenant ignoré par l'antispam!`
+            await inter.reply({
+                content: `Le canal ${channel.name ?? ""} est maintenant ignoré par l'antispam!`
             });
         } else if (inter.options.getSubcommand() === "disallow") {
-            const allowChansStoreKey = `${inter.guild?.id}-allowedchannels`;
+            const allowChansStoreKey = `${inter.guildId ?? ""}-allowedchannels`;
             let allowedChannels =
-                (await this.client.dbClient?.get<Array<string>>(
+                (await this.client.dbClient?.get<string[]>(
                     allowChansStoreKey
-                )) || [];
+                )) ?? [];
 
             if (!allowedChannels.includes(channel.id)) {
-                inter.reply({
-                    ephemeral: true,
-                    content: `Le canal ${channel.toString()} n'était pas ignoré par l'antispam`
+                await inter.reply({
+                    flags: MessageFlags.Ephemeral,
+                    content: `Le canal ${channel.name ?? ""} n'était pas ignoré par l'antispam`
                 });
                 return;
             }
@@ -102,8 +103,8 @@ export default class extends BotInteraction {
                 allowChansStoreKey,
                 allowedChannels
             );
-            inter.reply({
-                content: `Le canal ${channel.toString()} n'est plus ignoré par l'antispam!`
+            await inter.reply({
+                content: `Le canal ${channel.name ?? ""} n'est plus ignoré par l'antispam!`
             });
         }
     }

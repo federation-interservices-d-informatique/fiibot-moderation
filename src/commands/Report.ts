@@ -1,9 +1,9 @@
 import {
     ApplicationCommandType,
-    CacheType,
     MessageContextMenuCommandInteraction,
     WebhookClient,
-    Colors
+    Colors,
+    MessageFlags
 } from "discord.js";
 import {
     BotInteraction,
@@ -18,14 +18,14 @@ export default class PingCommand extends BotInteraction {
         });
     }
     async runMessageContextMenuCommand(
-        inter: MessageContextMenuCommandInteraction<CacheType>
+        inter: MessageContextMenuCommandInteraction
     ): Promise<void> {
         if (!inter.guild) return;
         const message = await inter.channel?.messages.fetch(inter.targetId);
         if (!message) return;
         if (!process.env.REPORT_HOOK_TOKEN || !process.env.REPORT_HOOK_ID) {
             await inter.reply({
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
                 content:
                     "Il semblerait que le système de signalement soit incorrectement configuré. Nous vous prions de réessayer plus tard."
             });
@@ -41,12 +41,12 @@ export default class PingCommand extends BotInteraction {
             await webhookClient.send({
                 embeds: [
                     {
-                        title: `Signalement de ${inter.user.username} sur ${inter.guild.name} (${inter.guildId})`,
+                        title: `Signalement de ${inter.user.username} sur ${inter.guild.name} (${inter.guildId ?? ""})`,
                         description: `[Lien du message](${message.url})`,
                         fields: [
                             {
                                 name: "Membre signalé(e)",
-                                value: `${message.author} (${message.author.id})`
+                                value: `${message.author.toString()} (${message.author.id})`
                             },
                             {
                                 name: "Message signalé",
@@ -66,19 +66,20 @@ export default class PingCommand extends BotInteraction {
                 ]
             });
         } catch (e) {
-            inter.reply({
-                ephemeral: true,
+            await inter.reply({
+                flags: MessageFlags.Ephemeral,
                 content:
                     "Impossible d'envoyer le signalement. Veuillez contacter <@743851266635071710> pour plus de détails."
             });
-            this.client.logger.error(
-                `Unable to send report of ${message.author.id} for message ${message.id} in ${message.guild?.name}: ${e}`,
-                "REPORTS"
-            );
+            if (e instanceof Error)
+                this.client.logger.error(
+                    `Unable to send report of ${message.author.id} for message ${message.id} in ${message.guild?.name ?? ""}: ${e}`,
+                    "REPORTS"
+                );
             return;
         }
         await inter.reply({
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
             content: `Votre signalement de ${message.author.tag} (${message.url}) a bien été pris en compte!`
         });
     }
